@@ -28,22 +28,27 @@ const Login = () => {
   const [price, setPrice] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [profile, setProfile] = useState('')
 
   const { user } = useKindeBrowserClient();
 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!name || !price || !startTime || !endTime || !profile) {
+      alert("Fill all fields before submiting")
+      return;
+    }
     const { data, error } = await supabase.from("services").insert({
-      name, price, starttime: startTime, endtime: endTime, created_by: user.id
+      name, price, starttime: startTime, endtime: endTime, created_by: user.id, profile
     });
 
     if (error) {
       console.error(error);
     }
-    if (data) {
+
+      alert("Service created successfully")
       console.log(data);
-    }
   };
 
   return (
@@ -66,15 +71,26 @@ const Login = () => {
                   type="name"
                   id="name"
                   value={name}
+                  required
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Health Checkup"
                   className="placeholder:text-gray-400"
                 />
-
+ <Label className=" font-normal" htmlFor="profile">Profile</Label>
+                   <Input
+                    type="text"
+                    value={profile}
+                    required
+                    onChange={(e) => setProfile(e.target.value)}
+                    id="endttime"
+                    placeholder="Doctor"
+                    className="placeholder:text-gray-400"
+                  />
                   <Label className="mt-2" htmlFor="Price">Price per hour (INR)</Label>
                 <Input
                   type="number"
                   value={price}
+                  required
                   onChange={(e) => setPrice(e.target.value)}
                   id="Price"
                   placeholder="20"
@@ -86,20 +102,23 @@ const Login = () => {
                   <Input
                     type="time"
                     value={startTime}
+                    required
                     onChange={(e) => setStartTime(e.target.value)}
                     id="starttime"
                     placeholder="20"
                     className="placeholder:text-gray-400"
                   />
-                  <Label className="text-xs font-normal" htmlFor="Price">End time</Label>
+                  <Label className="text-xs font-normal" htmlFor="endtime">End time</Label>
                    <Input
                     type="time"
                     value={endTime}
+                    required
                     onChange={(e) => setEndTime(e.target.value)}
                     id="endttime"
                     placeholder="20"
                     className="placeholder:text-gray-400"
                   />
+                 
                 </div>
               </div>
             </form>

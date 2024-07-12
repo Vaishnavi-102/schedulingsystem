@@ -3,10 +3,23 @@ import { useState, useEffect } from "react";
 import supabase from "@/utils/supabase";
 import Header from "@/components/Header";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-
+import { Button } from "@mantine/core";
+import { format } from "date-fns";
 const UserPage = () => {
   const { user } = useKindeBrowserClient();
   const [bookings, setBookings] = useState([]);
+
+  const cancelBooking = async (id)=>{
+    confirm("do you want to cancel your booking?")
+    const { data, error } = await supabase
+    .from("bookings")
+    .delete().eq('id', id).select();
+
+    if (error) {
+      console.log(error)
+    }
+    
+   }
 
   useEffect(() => {
     async function fetchServices() {
@@ -27,7 +40,7 @@ const UserPage = () => {
       }
     }
     fetchServices();
-  }, [user]);
+  }, [user, cancelBooking]);
 
   return (
     <>
@@ -40,11 +53,16 @@ const UserPage = () => {
         )}
         <h1 className="font-bold -mb-4 mt-2">Bookings made by you:</h1>
         <div className="flex gap-2">
-        {bookings?.map((booking) => (
+          
+        {bookings && bookings?.map((booking) => (
           <div key={booking.id} className="border p-4">
             <p className="capitalize font-bold">{booking.name}</p>
-            <p className="font-bold text-xl">{booking.services.name}</p>
+            <p className="font-bold text-xl">{booking?.services?.name}</p>
             <p>Total Price: Rs.{booking.total}</p>
+            <p>Booking time: {format(booking.from_time, "dd-M-yy hh:mm a")}</p>
+            <Button onClick={() => {
+              cancelBooking(booking.id)
+            }}>cancel</Button>
           </div>
         ))} 
         </div>

@@ -11,7 +11,7 @@ function getHoursArray() {
   return hoursArray
 }
 
-export function updateBookingStatus(timeSlots, bookings, selectedDate) {
+export function updateBookingStatus(timeSlots, bookings, selectedDate, setterFunc) {
     bookings.forEach(booking => {
         const bookingDate = parseISO(booking.from_time);
         if (!isSameDay(bookingDate, selectedDate)) {
@@ -24,6 +24,10 @@ export function updateBookingStatus(timeSlots, bookings, selectedDate) {
         slot.bookingStatus = 'booked';
       }
     });
+
+    const newSlots = timeSlots;
+
+    setterFunc(newSlots)
 
     
   }

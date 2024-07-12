@@ -24,6 +24,13 @@ const Header = () => {
             className: "vammo"
         },
         {
+            label: 'Services',
+            command: () => {
+                router.push('/services')
+            },
+            className: "vammo"
+        },
+        {
             label: 'My Bookings',
             command: () => {
                 router.push('/bookings')

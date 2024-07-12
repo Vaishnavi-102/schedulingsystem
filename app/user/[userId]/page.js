@@ -23,6 +23,8 @@ const UserPage = ({ params }) => {
 
   const [timeSlots, setTimeSlots] = useState(TimeSlots);
 
+
+
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
@@ -36,11 +38,12 @@ const UserPage = ({ params }) => {
       }
       if (data) {
         setBookings(data);
-        return data;
       }
     };
     getBookingByService(service.id);
-  }, [service]);
+  }, []);
+
+  // updateBookingStatus(timeSlots, bookings, date, setTimeSlots)
 
   console.log("bookings ", bookings);
 
