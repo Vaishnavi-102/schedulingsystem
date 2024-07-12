@@ -9,14 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@kinde-oss/kinde-auth-nextjs": "^2.3.4",
+    "@kinde-oss/kinde-auth-react": "^4.0.1",
+    "@mantine/core": "^7.11.1",
+    "@mantine/hooks": "^7.11.1",
+    "@mantine/modals": "^7.11.1",
+    "@radix-ui/react-label": "^2.1.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.44.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "lucide-react": "^0.407.0",
     "next": "14.2.5",
+    "primereact": "^10.7.0",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^2.4.0",
@@ -25,7 +33,9 @@
   "devDependencies": {
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
-    "postcss": "^8",
+    "postcss": "^8.4.39",
+    "postcss-preset-mantine": "^1.15.0",
+    "postcss-simple-vars": "^7.0.1",
     "tailwindcss": "^3.4.1"
   }
 }
