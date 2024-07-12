@@ -41,9 +41,13 @@ const UserPage = ({ params }) => {
       }
     };
     getBookingByService(service.id);
-  }, []);
+  }, [service.id]);
 
-  // updateBookingStatus(timeSlots, bookings, date, setTimeSlots)
+  useEffect(() => { 
+    const k = updateBookingStatus(hoursArray, bookings, date);
+    console.log("updating time slots");
+    setTimeSlots(k);
+    }, [bookings, date]);
 
   console.log("bookings ", bookings);
 
@@ -88,6 +92,12 @@ const UserPage = ({ params }) => {
       console.error(error);
       alert("Booking failed");
     }
+
+    const { data: bookingData, error: bookingError } = await supabase.from("bookings").select().eq("service_id", service.id);
+    if (bookingError) {
+        console.error(bookingError);
+        }
+        setBookings(bookingData);
     alert("Booking successful");
   };
 
@@ -147,6 +157,7 @@ const UserPage = ({ params }) => {
                     ? "bg-green-600"
                     : "bg-red-500 cursor-not-allowed"
                 }`}
+                disabled={hour.bookingStatus == "booked"}
                 onClick={() => {
                   handleBooking(hour.time);
                 }}

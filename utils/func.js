@@ -11,25 +11,27 @@ function getHoursArray() {
   return hoursArray
 }
 
-export function updateBookingStatus(timeSlots, bookings, selectedDate, setterFunc) {
-    bookings.forEach(booking => {
-        const bookingDate = parseISO(booking.from_time);
-        if (!isSameDay(bookingDate, selectedDate)) {
-            console.log('Booking date is not same as selected date');
-          return;
-        }
-      const bookingHour = format(bookingDate, 'hh:mm a');
-      const slot = timeSlots.find(slot => slot.time === bookingHour);
-      if (slot) {   
-        slot.bookingStatus = 'booked';
-      }
-    });
+export function updateBookingStatus(timeSlots, bookings, selectedDate) {
+    const updatedTimeSlots = timeSlots.map(slot => ({ ...slot, bookingStatus: 'free' }));
 
-    const newSlots = timeSlots;
+  bookings.forEach(booking => {
+    const bookingDate = parseISO(booking.from_time);
+    if (!isSameDay(bookingDate, selectedDate)) {
+      return;
+    }
 
-    setterFunc(newSlots)
+    const bookingHour = format(bookingDate, 'hh:mm a');
+    console.log("booking hour", bookingHour);
 
-    
+    // Find the index of the matching slot
+    const slotIndex = updatedTimeSlots.findIndex(slot => slot.time === bookingHour);
+    if (slotIndex !== -1) {
+      updatedTimeSlots[slotIndex].bookingStatus = 'booked';
+    }
+  });
+
+  console.log("updated time slots", updatedTimeSlots);
+  return updatedTimeSlots;
   }
 
 
