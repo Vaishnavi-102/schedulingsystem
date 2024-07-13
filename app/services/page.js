@@ -80,7 +80,7 @@ export default function Home() {
             Your link:{" "}
             <a
               className="text-blue-400 underline"
-              href={`http://localhost:3000/user/${user.id}`}
+              href={`/user/${user.id}`}
             >
               Click Me to view Services and Book
             </a>

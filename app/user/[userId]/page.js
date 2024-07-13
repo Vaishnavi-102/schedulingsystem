@@ -131,8 +131,8 @@ const UserPage = ({ params }) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:3000/bookings/${id}/${from_time}/${to_time}/${booked_by}/${price}`,
-      cancel_url: `http://localhost:3000/bookings/cancel-${service.id}`,
+      success_url: `/bookings/${id}/${from_time}/${to_time}/${booked_by}/${price}`,
+      cancel_url: `/bookings/cancel-${service.id}`,
     });
 
 
