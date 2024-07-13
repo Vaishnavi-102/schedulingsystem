@@ -3,27 +3,26 @@ import { useState, useEffect } from "react";
 import supabase from "@/utils/supabase";
 import Header from "@/components/Header";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { format, addHours, formatISO, parseISO, isSameDay} from "date-fns";
+import { format, addHours, formatISO, parseISO, isSameDay } from "date-fns";
 import { useDisclosure } from "@mantine/hooks";
 import { Modal } from "@mantine/core";
 import { hoursArray, updateBookingStatus } from "@/utils/func";
 import { TimeSlots } from "@/utils/globals";
+import Stripe from "stripe";
 
 const UserPage = ({ params }) => {
-
-  
-
   const [opened, { open, close }] = useDisclosure(false);
 
   const userId = params.userId;
   const { user } = useKindeBrowserClient();
   const [services, setServices] = useState([]);
   const [service, setService] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [checkoutURL, setCheckoutURL] = useState("");
 
   const [timeSlots, setTimeSlots] = useState(TimeSlots);
-
-
+  console.log("time slots in page", timeSlots);
+  console.log("service" , service)
 
   const [bookings, setBookings] = useState([]);
 
@@ -44,10 +43,15 @@ const UserPage = ({ params }) => {
   }, [service.id]);
 
   useEffect(() => { 
-    const k = updateBookingStatus(hoursArray, bookings, date);
+    if (!checkoutURL) return;
+    window.location.href = checkoutURL;
+  }, [checkoutURL]);
+
+  useEffect(() => {
+    const k = updateBookingStatus(hoursArray,service, bookings, date);
     console.log("updating time slots");
     setTimeSlots(k);
-    }, [bookings, date]);
+  }, [bookings, date, service]);
 
   console.log("bookings ", bookings);
 
@@ -67,7 +71,6 @@ const UserPage = ({ params }) => {
     fetchServices();
   }, [userId]);
 
-
   const handleBooking = async (hour) => {
     const confirmed = confirm("Are you sure you want to book this slot?");
     if (!confirmed) {
@@ -79,30 +82,64 @@ const UserPage = ({ params }) => {
     const addHour = addHours(parsedTime, 1);
     const formattedNext = format(addHour, "yyyy-MM-dd HH:mm:ss");
     const nextHour = formatISO(formattedNext);
+    console.log("parsed time", parsedTime);
+    console.log("next hour", nextHour);
 
-    const { data, error } = await supabase.from("bookings").insert({
-      service_id: service.id,
-      booked_by: user.id,
-      from_time: parsedTime,
-      to_time: nextHour,
-      total: service.price,
-    });
+    await handleStripeBooking(service.name, service.price, service.id, parsedTime, nextHour, user.id);
 
-    if (error) {
-      console.error(error);
-      alert("Booking failed");
-    }
+    // const { data, error } = await supabase.from("bookings").insert({
+    //   service_id: service.id,
+    //   booked_by: user.id,
+    //   from_time: parsedTime,
+    //   to_time: nextHour,
+    //   total: service.price,
+    // });
 
-    const { data: bookingData, error: bookingError } = await supabase.from("bookings").select().eq("service_id", service.id);
-    if (bookingError) {
-        console.error(bookingError);
-        }
-        setBookings(bookingData);
-    alert("Booking successful");
+
+
+    // if (error) {
+    //   console.error(error);
+    //   alert("Booking failed");
+    // }
+
+    // const { data: bookingData, error: bookingError } = await supabase
+    //   .from("bookings")
+    //   .select()
+    //   .eq("service_id", service.id);
+    // if (bookingError) {
+    //   console.error(bookingError);
+    // }
+    // setBookings(bookingData);
+    // alert("Booking successful");
   };
 
+  const handleStripeBooking = async (serviceName, price, id, from_time, to_time, booked_by) => {
+    const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
 
-  updateBookingStatus(hoursArray, bookings, date);
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: serviceName,
+            },
+            unit_amount: price * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `http://localhost:3000/bookings/${id}/${from_time}/${to_time}/${booked_by}/${price}`,
+      cancel_url: `http://localhost:3000/bookings/cancel-${service.id}`,
+    });
+
+
+    const checkoutURL = session.url;
+    setCheckoutURL(checkoutURL);
+  }
+
 
   return (
     <>
@@ -119,15 +156,15 @@ const UserPage = ({ params }) => {
           </p>
         )}
         <h1 className="font-bold -mb-4 mt-2">Services</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-col w-full gap-2">
           {services?.map((service) => (
-            <div key={service.id} className="border p-4">
-              <p className="capitalize font-bold">{service.name}</p>
+            <div key={service.id} className="border rounded-md shadow p-4">
+              <p className="capitalize font-bold text-xl">{service.name}</p>
               <p>Rs.{service.price}/hr</p>
               <p>from: {service.starttime}</p>
               <p>To: {service.endtime}</p>
               <button
-                className="bg-blue-500 text-white px-2"
+                className="bg-blue-500 rounded-md py-1 text-white px-2"
                 onClick={() => {
                   open();
                   setService(service);
@@ -140,31 +177,32 @@ const UserPage = ({ params }) => {
         </div>
       </div>
       <Modal opened={opened} onClose={close} title="Select open slots">
-        <div className="flex flex-col">
+        <div className="flex-col pb-3 w-full">
           <input
             className="border-2 border-black mx-2"
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+
+            onChange={(e) => {
+              setDate(e.target.value)
+            }}
           />
           {/* <button className="border bg-gray-300 px-2 mx-auto mt-2 max-w-fit">Set Date</button> */}
-          {date &&
-            timeSlots.map((hour) => (
-              <button
-                key={hour.time}
-                className={`m-2 py-1 text-white ${
-                  hour.bookingStatus == "free"
-                    ? "bg-green-600"
-                    : "bg-red-500 cursor-not-allowed"
-                }`}
-                disabled={hour.bookingStatus == "booked"}
-                onClick={() => {
-                  handleBooking(hour.time);
-                }}
-              >
-                {hour.time}
-              </button>
-            ))}
+          <div className="w-full flex overflow-scroll">
+            {date &&
+              timeSlots.map((hour) => (
+                <button
+                  key={hour.time}
+                  className={`m-2 rounded-md py-1 cursor-not-allowed text-black px-2 border ${hour.bookingStatus == "free" && "bg-green-300 cursor-pointer"} ${hour.bookingStatus == "unavailable" && "bg-gray-300"} ${hour.bookingStatus == "booked" && "bg-red-300"}`}
+                  onClick={() => {
+                    handleBooking(hour.time);
+                  }}
+                  disabled={hour.bookingStatus !== "free"}
+                >
+                  {hour.time}
+                </button>
+              ))}
+          </div>
         </div>
       </Modal>
     </>

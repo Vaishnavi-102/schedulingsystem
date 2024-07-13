@@ -1,7 +1,7 @@
-import "primereact/resources/themes/lara-light-cyan/theme.css";
 import { Inter } from "next/font/google";
-import '@mantine/core/styles.css';
 import "./globals.css";
+import '@mantine/core/styles.css';
+import "primereact/resources/themes/lara-light-cyan/theme.css";
 
 
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
